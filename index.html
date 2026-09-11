@@ -14,7 +14,7 @@
       --terminal:#0c1417;
       --line:#284044;
       --text:#e7f2eb;
-      --muted:#b0c2c0;          /* C16: 대비율 상향 (7.2:1 → 8.5:1) */
+      --muted:#b0c2c0;
       --green:#99ff5e;
       --cyan:#57d8df;
       --amber:#ffc75a;
@@ -25,7 +25,7 @@
     html,body{
       height:100%;margin:0;background:var(--bg);color:var(--text);
       display:flex;align-items:center;justify-content:center;
-      overflow-x:hidden;         /* C12: 가로 넘침 최후 안전망 */
+      overflow-x:hidden;
     }
     body{font-family:"IBM Plex Mono","Noto Sans KR",monospace;overflow:hidden}
 
@@ -61,7 +61,6 @@
       text-decoration:underline;text-underline-offset:4px;
     }
 
-    /* C10/C11: 세로 넘침 방지 — padding 반응형, height:100% → min-height:100% */
     .screen{
       position:absolute;inset:48px 0 0 0;
       padding:clamp(16px,3vh,32px) clamp(20px,4vw,50px);
@@ -72,13 +71,19 @@
     .screen.active{opacity:1;visibility:visible;transform:translateY(0);z-index:2}
     .screen.leaving{opacity:0;transform:translateY(-10px);visibility:hidden}
 
-    .hero{display:grid;align-content:center;min-height:100%}
+    /* 옵션 B: 콘텐츠가 짧으면 중앙, 넘치면 자연 상단 정렬 */
+    .hero{
+      display:grid;
+      align-content:center;
+      min-height:100%;
+      padding-top:clamp(4px, 2vh, 24px);
+    }
+
     .prompt{font-size:clamp(.75rem,1.4vw,.95rem);color:var(--green);margin:0 0 12px}
     .prompt::before{content:"jsw@portfolio:~$ ";color:var(--cyan)}
 
     h1,h2,h3,p{margin-top:0}
 
-    /* C10/C11: h1 폰트 축소로 1366×768에서도 하단 노출 확보 */
     h1{
       max-width:940px;
       font-size:clamp(1.5rem,3.6vw,3.2rem);
@@ -96,20 +101,31 @@
       margin:0 0 10px;
     }
     .dialogue strong{color:var(--cyan)}
+
+    /* 홈 최상단 소개 문장 */
+    .intro{
+      font-family:"Noto Sans KR",sans-serif;
+      font-size:clamp(0.85rem,1.25vw,1rem);
+      color:var(--text);
+      margin:0 0 16px;
+      max-width:820px;
+      word-break:keep-all;
+      overflow-wrap:break-word;
+    }
+
     .cursor::after{content:"▋";color:var(--green);margin-left:3px;animation:blink .85s steps(2,end) infinite}
     @keyframes blink{50%{opacity:0}}
 
     .typed{display:inline-block;overflow:hidden;white-space:nowrap;animation:typing 0.8s steps(30,end) forwards}
     @keyframes typing{from{width:0}to{width:100%}}
 
-    /* C10/C11: 메뉴 높이/간격 압축 */
     .command-list{display:grid;gap:8px;width:min(100%,620px);margin-top:16px}
     .command{
       display:flex;text-align:left;align-items:center;gap:10px;
       min-height:42px;padding:0 14px;
       border:1px solid var(--line);color:var(--text);background:#101c20;
       cursor:pointer;transition:background .16s,border-color .16s,transform .16s;
-      min-width:0;   /* C12: flex 자식 축소 허용 */
+      min-width:0;
     }
     .command:hover{background:#15292b;border-color:var(--green);transform:translateX(5px)}
     .command b{color:var(--green);min-width:0}
@@ -127,7 +143,6 @@
     }
     .label{color:var(--amber);font-size:.83rem;margin-bottom:4px}
 
-    /* C15: 각 페이지 h1으로 승격, 시각 크기는 기존 h2 수준 유지 */
     .page-head h1{
       font-size:clamp(1.8rem,3.5vw,3.2rem);
       line-height:.95;letter-spacing:-.09em;margin-bottom:6px;
@@ -148,7 +163,6 @@
       font-family:"Noto Sans KR",sans-serif;font-size:0.92rem;line-height:1.6;
       color:#dce7e3;word-break:keep-all;overflow-wrap:break-word;
     }
-    /* C15: h3 → h2 승격, 시각 스타일은 기존 h3 유지 */
     .block h2{
       font-family:"IBM Plex Mono",monospace;
       font-size:.8rem;letter-spacing:.04em;color:var(--cyan);
@@ -163,7 +177,6 @@
       display:flex;flex-wrap:wrap;gap:10px;
     }
     .links::before{content:"LINKS / 관련 링크";flex-basis:100%;color:var(--cyan);font-size:.75rem}
-    /* C12: 긴 URL 줄바꿈 강제 */
     .links a{
       color:var(--amber);font-size:.81rem;text-underline-offset:4px;
       overflow-wrap:anywhere;word-break:break-word;max-width:100%;
@@ -198,8 +211,14 @@
     <!-- 홈 화면 -->
     <section class="screen hero active" id="home" aria-labelledby="home-title">
       <div>
+        <!-- 소개 문장을 최상단에 배치 -->
+        <p class="intro">
+          이 페이지는 실행·기록·예방을 중심으로 일하는 개발자 정성원의 역량과 프로젝트 근거를 소개하는 포트폴리오입니다.
+        </p>
+
         <p class="prompt">./who-am-i</p>
         <p class="dialogue">면접관님 : “누구세요?”<br /><strong>??? : “저요?”</strong></p>
+
         <h1 id="home-title">
           <span class="typed">실행하고 기록하고 예방하는<br />개발자 정성원입니다.</span>
           <span class="cursor" aria-hidden="true"></span>
@@ -325,7 +344,6 @@
       motionButton.textContent = `모션 줄이기: ${value ? 'ON' : 'OFF'}`;
     }
 
-    // 2, 3, 4페이지 본문 텍스트 캐싱
     document.querySelectorAll('.type-text').forEach(el => {
       el.dataset.text = el.textContent;
       el.textContent = '';
@@ -370,13 +388,11 @@
       const next = document.getElementById(id);
       if (!next || next === current) return;
 
-      // C14: 자동 포커스 이동 제거 → Tab 순서 유지
       const reveal = () => {
         if (current) current.classList.remove('active', 'leaving');
         next.classList.add('active');
         next.scrollTop = 0;
 
-        // 홈 타이핑 애니메이션 리플로우
         next.querySelectorAll('.typed').forEach(el => {
           el.style.animation = 'none';
           el.offsetHeight;
@@ -384,7 +400,6 @@
         });
 
         runTypingForPage(next);
-        // C14: focus() 강제 이동 삭제
       };
 
       if (document.body.classList.contains('reduce-motion') || !current) {
