@@ -9,72 +9,174 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet" />
   <style>
-    :root{--bg:#070b0d;--terminal:#0c1417;--line:#284044;--text:#e7f2eb;--muted:#9daead;--green:#99ff5e;--cyan:#57d8df;--amber:#ffc75a;--red:#ff7777}*{box-sizing:border-box}
-    
-    /* 화면 전체 정중앙 정렬 배치 */
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--text);display:flex;align-items:center;justify-content:center}
+    :root{
+      --bg:#070b0d;
+      --terminal:#0c1417;
+      --line:#284044;
+      --text:#e7f2eb;
+      --muted:#b0c2c0;          /* C16: 대비율 상향 (7.2:1 → 8.5:1) */
+      --green:#99ff5e;
+      --cyan:#57d8df;
+      --amber:#ffc75a;
+      --red:#ff7777;
+    }
+    *{box-sizing:border-box}
+
+    html,body{
+      height:100%;margin:0;background:var(--bg);color:var(--text);
+      display:flex;align-items:center;justify-content:center;
+      overflow-x:hidden;         /* C12: 가로 넘침 최후 안전망 */
+    }
     body{font-family:"IBM Plex Mono","Noto Sans KR",monospace;overflow:hidden}
-    
-    button,a{font:inherit}a{color:inherit}button:focus-visible,a:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
-    
-    /* 터미널 프레임 중앙 고정 */
-    .terminal{width:min(1200px,calc(100vw - 40px));height:min(760px,calc(100vh - 40px));border:1px solid var(--line);background:linear-gradient(125deg,rgba(87,216,223,.04),transparent 30%),var(--terminal);box-shadow:0 26px 80px #0008;position:relative;display:flex;flex-direction:column;overflow:hidden}.terminal::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,0,0,.13) 4px 5px);mix-blend-mode:overlay}
-    
-    .bar{height:48px;flex-shrink:0;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:var(--muted);font-size:.78rem;position:relative;z-index:1}
-    .dots{display:flex;gap:7px}.dots i{width:10px;height:10px;border-radius:50%;background:var(--red)}.dots i:nth-child(2){background:var(--amber)}.dots i:nth-child(3){background:var(--green)}.motion{border:0;background:transparent;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:4px}
-    
-    /* 컨텐츠 영역 스크롤 및 전환 애니메이션 */
-    .screen{position:absolute;inset:48px 0 0 0;padding:32px clamp(20px,4vw,50px);overflow-y:auto;opacity:0;visibility:hidden;transform:translateY(10px);transition:opacity .25s ease,transform .25s ease,visibility .25s}
+
+    button,a{font:inherit}
+    a{color:inherit}
+    button:focus-visible,a:focus-visible{outline:3px solid var(--amber);outline-offset:3px}
+
+    .terminal{
+      width:min(1200px,calc(100vw - 40px));
+      height:min(760px,calc(100vh - 40px));
+      border:1px solid var(--line);
+      background:linear-gradient(125deg,rgba(87,216,223,.04),transparent 30%),var(--terminal);
+      box-shadow:0 26px 80px #0008;
+      position:relative;display:flex;flex-direction:column;overflow:hidden;
+    }
+    .terminal::after{
+      content:"";position:absolute;inset:0;pointer-events:none;
+      background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,0,0,.13) 4px 5px);
+      mix-blend-mode:overlay;
+    }
+
+    .bar{
+      height:48px;flex-shrink:0;border-bottom:1px solid var(--line);
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 16px;color:var(--muted);font-size:.78rem;position:relative;z-index:1;
+    }
+    .dots{display:flex;gap:7px}
+    .dots i{width:10px;height:10px;border-radius:50%;background:var(--red)}
+    .dots i:nth-child(2){background:var(--amber)}
+    .dots i:nth-child(3){background:var(--green)}
+    .motion{
+      border:0;background:transparent;color:var(--muted);cursor:pointer;
+      text-decoration:underline;text-underline-offset:4px;
+    }
+
+    /* C10/C11: 세로 넘침 방지 — padding 반응형, height:100% → min-height:100% */
+    .screen{
+      position:absolute;inset:48px 0 0 0;
+      padding:clamp(16px,3vh,32px) clamp(20px,4vw,50px);
+      overflow-y:auto;
+      opacity:0;visibility:hidden;transform:translateY(10px);
+      transition:opacity .25s ease,transform .25s ease,visibility .25s;
+    }
     .screen.active{opacity:1;visibility:visible;transform:translateY(0);z-index:2}
     .screen.leaving{opacity:0;transform:translateY(-10px);visibility:hidden}
 
-    .hero{display:grid;align-content:center;height:100%}
-    .prompt{font-size:clamp(.75rem,1.4vw,.95rem);color:var(--green);margin:0 0 14px}
+    .hero{display:grid;align-content:center;min-height:100%}
+    .prompt{font-size:clamp(.75rem,1.4vw,.95rem);color:var(--green);margin:0 0 12px}
     .prompt::before{content:"jsw@portfolio:~$ ";color:var(--cyan)}
-    
+
     h1,h2,h3,p{margin-top:0}
-    h1{max-width:940px;font-size:clamp(1.8rem,4.5vw,4rem);line-height:1.12;letter-spacing:-.075em;margin-bottom:20px;word-break:keep-all}
+
+    /* C10/C11: h1 폰트 축소로 1366×768에서도 하단 노출 확보 */
+    h1{
+      max-width:940px;
+      font-size:clamp(1.5rem,3.6vw,3.2rem);
+      line-height:1.14;
+      letter-spacing:-.06em;
+      margin-bottom:16px;
+      word-break:keep-all;
+      overflow-wrap:break-word;
+    }
     h1 span,h2{color:var(--green);text-shadow:0 0 16px #99ff5e55}
-    
-    .dialogue{font-family:"Noto Sans KR",sans-serif;color:var(--muted);font-size:clamp(0.9rem,1.4vw,1.1rem);font-weight:700;line-height:1.6;margin:0 0 12px}
+
+    .dialogue{
+      font-family:"Noto Sans KR",sans-serif;color:var(--muted);
+      font-size:clamp(0.85rem,1.3vw,1.05rem);font-weight:700;line-height:1.55;
+      margin:0 0 10px;
+    }
     .dialogue strong{color:var(--cyan)}
     .cursor::after{content:"▋";color:var(--green);margin-left:3px;animation:blink .85s steps(2,end) infinite}
     @keyframes blink{50%{opacity:0}}
-    
-    /* 홈 화면 타이핑 효과 */
+
     .typed{display:inline-block;overflow:hidden;white-space:nowrap;animation:typing 0.8s steps(30,end) forwards}
     @keyframes typing{from{width:0}to{width:100%}}
 
-    .command-list{display:grid;gap:10px;width:min(100%,620px);margin-top:20px}
-    .command{display:flex;text-align:left;align-items:center;gap:10px;min-height:46px;padding:0 14px;border:1px solid var(--line);color:var(--text);background:#101c20;cursor:pointer;transition:background .16s,border-color .16s,transform .16s}
+    /* C10/C11: 메뉴 높이/간격 압축 */
+    .command-list{display:grid;gap:8px;width:min(100%,620px);margin-top:16px}
+    .command{
+      display:flex;text-align:left;align-items:center;gap:10px;
+      min-height:42px;padding:0 14px;
+      border:1px solid var(--line);color:var(--text);background:#101c20;
+      cursor:pointer;transition:background .16s,border-color .16s,transform .16s;
+      min-width:0;   /* C12: flex 자식 축소 허용 */
+    }
     .command:hover{background:#15292b;border-color:var(--green);transform:translateX(5px)}
-    .command b{color:var(--green)}
-    .command small{color:var(--muted);margin-left:auto}
-    .hint{color:var(--muted);font-size:.78rem;margin:16px 0 0}
-    
+    .command b{color:var(--green);min-width:0}
+    .command small{
+      color:var(--muted);margin-left:auto;
+      min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    }
+    .hint{color:var(--muted);font-size:.78rem;margin:14px 0 0}
+
     .page-head{border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:16px}
-    .back{border:0;padding:0;background:transparent;color:var(--cyan);cursor:pointer;font-size:.8rem;margin-bottom:8px;text-decoration:underline;text-underline-offset:4px}
+    .back{
+      border:0;padding:0;background:transparent;color:var(--cyan);
+      cursor:pointer;font-size:.8rem;margin-bottom:8px;
+      text-decoration:underline;text-underline-offset:4px;
+    }
     .label{color:var(--amber);font-size:.83rem;margin-bottom:4px}
-    h2{font-size:clamp(1.8rem,3.5vw,3.2rem);line-height:.95;letter-spacing:-.09em;margin-bottom:6px}
-    .subtitle{font-family:"Noto Sans KR",sans-serif;font-size:clamp(0.95rem,1.3vw,1.15rem);font-weight:800;margin-bottom:0}
-    
-    .case-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(240px,.75fr);gap:20px;align-items:start}
+
+    /* C15: 각 페이지 h1으로 승격, 시각 크기는 기존 h2 수준 유지 */
+    .page-head h1{
+      font-size:clamp(1.8rem,3.5vw,3.2rem);
+      line-height:.95;letter-spacing:-.09em;margin-bottom:6px;
+      max-width:none;
+    }
+    .subtitle{
+      font-family:"Noto Sans KR",sans-serif;
+      font-size:clamp(0.95rem,1.3vw,1.15rem);font-weight:800;margin-bottom:0;
+    }
+
+    .case-grid{
+      display:grid;
+      grid-template-columns:minmax(0,1.25fr) minmax(240px,.75fr);
+      gap:20px;align-items:start;
+    }
     .left-stack{display:grid;gap:14px}
-    .block{font-family:"Noto Sans KR",sans-serif;font-size:0.92rem;line-height:1.6;color:#dce7e3;word-break:keep-all}
-    .block h3{font-family:"IBM Plex Mono",monospace;font-size:.8rem;letter-spacing:.04em;color:var(--cyan);margin-bottom:4px}
+    .block{
+      font-family:"Noto Sans KR",sans-serif;font-size:0.92rem;line-height:1.6;
+      color:#dce7e3;word-break:keep-all;overflow-wrap:break-word;
+    }
+    /* C15: h3 → h2 승격, 시각 스타일은 기존 h3 유지 */
+    .block h2{
+      font-family:"IBM Plex Mono",monospace;
+      font-size:.8rem;letter-spacing:.04em;color:var(--cyan);
+      margin-bottom:4px;text-shadow:none;
+    }
     .result{border-left:1px solid var(--green);padding-left:16px}
-    .result h3{color:var(--green)}
+    .result h2{color:var(--green)}
     .block strong{color:var(--green)}
-    
-    .links{margin-top:14px;padding-top:10px;border-top:1px dashed var(--line);display:flex;flex-wrap:wrap;gap:10px}
+
+    .links{
+      margin-top:14px;padding-top:10px;border-top:1px dashed var(--line);
+      display:flex;flex-wrap:wrap;gap:10px;
+    }
     .links::before{content:"LINKS / 관련 링크";flex-basis:100%;color:var(--cyan);font-size:.75rem}
-    .links a{color:var(--amber);font-size:.81rem;text-underline-offset:4px}
+    /* C12: 긴 URL 줄바꿈 강제 */
+    .links a{
+      color:var(--amber);font-size:.81rem;text-underline-offset:4px;
+      overflow-wrap:anywhere;word-break:break-word;max-width:100%;
+    }
     .links a::before{content:"↗ ";color:var(--green)}
-    
+
     .pager{margin-top:16px;display:flex;gap:10px;flex-wrap:wrap}
-    .pager button{border:1px solid var(--line);background:transparent;color:var(--text);min-height:36px;padding:0 12px;cursor:pointer}
+    .pager button{
+      border:1px solid var(--line);background:transparent;color:var(--text);
+      min-height:36px;padding:0 12px;cursor:pointer;
+    }
     .pager button:hover{border-color:var(--green);color:var(--green)}
-    
+
     body.reduce-motion *{animation:none !important;transition:none !important}
 
     @media(max-width:700px){
@@ -87,14 +189,21 @@
 </head>
 <body>
   <main class="terminal" id="main">
-    <header class="bar"><div class="dots" aria-hidden="true"><i></i><i></i><i></i></div><span>JSW CLI — portfolio.exe</span><button class="motion" type="button" aria-pressed="false">모션 줄이기: OFF</button></header>
-    
-    <!-- 홈 화면 (1페이지) -->
-    <section class="screen hero active" id="home" aria-labelledby="page-title">
+    <header class="bar">
+      <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
+      <span>JSW CLI — portfolio.exe</span>
+      <button class="motion" type="button" aria-pressed="false">모션 줄이기: OFF</button>
+    </header>
+
+    <!-- 홈 화면 -->
+    <section class="screen hero active" id="home" aria-labelledby="home-title">
       <div>
         <p class="prompt">./who-am-i</p>
         <p class="dialogue">면접관님 : “누구세요?”<br /><strong>??? : “저요?”</strong></p>
-        <h1 id="page-title"><span class="typed">실행하고 기록하고 예방하는<br />개발자 정성원입니다.</span><span class="cursor" aria-hidden="true"></span></h1>
+        <h1 id="home-title">
+          <span class="typed">실행하고 기록하고 예방하는<br />개발자 정성원입니다.</span>
+          <span class="cursor" aria-hidden="true"></span>
+        </h1>
         <nav class="command-list" aria-label="포트폴리오 메뉴">
           <button class="command" type="button" data-page="execute"><b>&gt; JSW.exe</b><small>실행하는</small></button>
           <button class="command" type="button" data-page="log"><b>&gt; JSW.log</b><small>기록하는</small></button>
@@ -109,22 +218,22 @@
       <div class="page-head">
         <button class="back" type="button" data-page="home">← cd ~/</button>
         <p class="label">01 / EXECUTE</p>
-        <h2 id="execute-title" class="type-text">JSW.exe</h2>
+        <h1 id="execute-title" class="type-text">JSW.exe</h1>
         <p class="subtitle type-text">실행하는</p>
       </div>
       <div class="case-grid">
         <div class="left-stack">
           <article class="block">
-            <h3 class="type-text">PROBLEM / 불확실한 시작</h3>
+            <h2 class="type-text">PROBLEM / 불확실한 시작</h2>
             <p class="type-text">조별 프로젝트 초기, 명확한 방향과 구체적 요구사항이 부족해 기획의 불확실성이 높았습니다. 말이나 문서만으로는 팀의 싱크를 맞추기 어려워, 빠르게 확인할 수 있는 시각적 기준점이 필요했습니다.</p>
           </article>
           <article class="block">
-            <h3 class="type-text">ACTION / 먼저 만든 기준</h3>
+            <h2 class="type-text">ACTION / 먼저 만든 기준</h2>
             <p class="type-text">사전에 학습한 웹 개발 기술로 가상 로그인 기능을 포함한 웹사이트를 단독으로 선제 구축했습니다. 초기 프로토타입을 즉시 배포·공유해 추상적 아이디어를 눈에 보이는 결과물로 바꿨습니다.</p>
           </article>
         </div>
         <article class="block result">
-          <h3 class="type-text">RESULT / 협업 가속</h3>
+          <h2 class="type-text">RESULT / 협업 가속</h2>
           <p class="type-text">모호했던 요구사항을 조기에 구체화하고 프로젝트 방향을 빠르게 확립했습니다. 기술적·시각적 기준을 미리 다져 이후 협업 속도를 높이고 원활한 진행을 주도했습니다.</p>
         </article>
       </div>
@@ -142,22 +251,22 @@
       <div class="page-head">
         <button class="back" type="button" data-page="home">← cd ~/</button>
         <p class="label">02 / WRITE</p>
-        <h2 id="log-title" class="type-text">JSW.log</h2>
+        <h1 id="log-title" class="type-text">JSW.log</h1>
         <p class="subtitle type-text">기록하는</p>
       </div>
       <div class="case-grid">
         <div class="left-stack">
           <article class="block">
-            <h3 class="type-text">PROBLEM / 반복되는 변수</h3>
+            <h2 class="type-text">PROBLEM / 반복되는 변수</h2>
             <p class="type-text">구현·배포 단계에는 환경 차이, 설정 누락, 예상 밖 버그가 동시다발적으로 발생합니다. 원인과 수정 이력이 관리되지 않으면 같은 실수와 정보 격차가 반복되므로 기록·공유 프로세스가 필요했습니다.</p>
           </article>
           <article class="block">
-            <h3 class="type-text">ACTION / 로그를 자산으로</h3>
+            <h2 class="type-text">ACTION / 로그를 자산으로</h2>
             <p class="type-text">발생한 에러와 개선 사항을 사소한 것까지 실시간으로 상세 기록했습니다. 로그로 근본 원인을 분석해 코드를 보완하고, 수정 전후 결과와 적용 사항을 명확히 업데이트해 팀 자료실에 즉시 공유했습니다.</p>
           </article>
         </div>
         <article class="block result">
-          <h3 class="type-text">RESULT / 투명한 피드백 루프</h3>
+          <h2 class="type-text">RESULT / 투명한 피드백 루프</h2>
           <p class="type-text">시행착오 시간을 단축하고 같은 오류의 재발을 차단했습니다. 해결 과정과 피드백 루프를 축적해 안정적 배포와 완성도를 높였으며, 프로젝트 리스크를 투명하게 관리했습니다.</p>
         </article>
       </div>
@@ -176,22 +285,22 @@
       <div class="page-head">
         <button class="back" type="button" data-page="home">← cd ~/</button>
         <p class="label">03 / PREVENT</p>
-        <h2 id="prevent-title" class="type-text">JSW.lint</h2>
+        <h1 id="prevent-title" class="type-text">JSW.lint</h1>
         <p class="subtitle type-text">예방하는</p>
       </div>
       <div class="case-grid">
         <div class="left-stack">
           <article class="block">
-            <h3 class="type-text">PROBLEM / 멈출 수 있는 서버</h3>
+            <h2 class="type-text">PROBLEM / 멈출 수 있는 서버</h2>
             <p class="type-text">Supabase 무료 플랜은 7일 동안 DB 활동이 없으면 서버가 자동 일시 중지됩니다. 시연·테스트 중 장애를 막고 팀원이 인프라 관리에 신경 쓰지 않도록 자동 유지보수가 필요했습니다.</p>
           </article>
           <article class="block">
-            <h3 class="type-text">ACTION / 비용 없는 자동화</h3>
+            <h2 class="type-text">ACTION / 비용 없는 자동화</h2>
             <p class="type-text">유료 모니터링 도구 대신 협업 중인 GitHub Actions를 사용했습니다. schedule 트리거와 Cron Expression으로 매일 가벼운 Health Check API 호출을 실행하는 자동화 워크플로우를 작성했습니다.</p>
           </article>
         </div>
         <article class="block result">
-          <h3 class="type-text">RESULT / 상시 활성 환경</h3>
+          <h2 class="type-text">RESULT / 상시 활성 환경</h2>
           <p class="type-text">개발팀이 수동으로 쿼리를 실행하지 않아도 Supabase 서버를 안정적으로 Active 상태로 유지할 수 있게 됐습니다. 운영 리스크를 코드로 예방한 무중단 개발 환경입니다.</p>
         </article>
       </div>
@@ -205,27 +314,32 @@
       </div>
     </section>
   </main>
+
   <script>
     const motionButton = document.querySelector('.motion');
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    function setMotion(value) { document.body.classList.toggle('reduce-motion', value); motionButton.setAttribute('aria-pressed', value); motionButton.textContent = `모션 줄이기: ${value ? 'ON' : 'OFF'}`; }
-    
-    // 2, 3, 4페이지 본문 텍스트 타이핑 초기화 및 캐싱
+
+    function setMotion(value) {
+      document.body.classList.toggle('reduce-motion', value);
+      motionButton.setAttribute('aria-pressed', value);
+      motionButton.textContent = `모션 줄이기: ${value ? 'ON' : 'OFF'}`;
+    }
+
+    // 2, 3, 4페이지 본문 텍스트 캐싱
     document.querySelectorAll('.type-text').forEach(el => {
       el.dataset.text = el.textContent;
       el.textContent = '';
     });
 
-    // 순차적 글자 타이핑 실행 함수
     function runTypingForPage(pageEl) {
+      const targets = pageEl.querySelectorAll('.type-text');
+      if (!targets.length) return;
+
       if (document.body.classList.contains('reduce-motion')) {
-        pageEl.querySelectorAll('.type-text').forEach(el => {
-          el.textContent = el.dataset.text;
-        });
+        targets.forEach(el => { el.textContent = el.dataset.text; });
         return;
       }
 
-      const targets = pageEl.querySelectorAll('.type-text');
       targets.forEach(el => el.textContent = '');
 
       let index = 0;
@@ -234,13 +348,13 @@
         const target = targets[index];
         const text = target.dataset.text;
         let charIdx = 0;
-        
         target.textContent = '';
+
         function typeChar() {
           if (charIdx < text.length) {
             target.textContent += text.charAt(charIdx);
             charIdx++;
-            setTimeout(typeChar, 8); // 타이핑 속도 조절
+            setTimeout(typeChar, 8);
           } else {
             index++;
             typeNextTarget();
@@ -251,31 +365,26 @@
       typeNextTarget();
     }
 
-    // 페이지 전환 함수
     function openPage(id) {
       const current = document.querySelector('.screen.active');
       const next = document.getElementById(id);
       if (!next || next === current) return;
-      
+
+      // C14: 자동 포커스 이동 제거 → Tab 순서 유지
       const reveal = () => {
-        if (current) {
-          current.classList.remove('active', 'leaving');
-        }
+        if (current) current.classList.remove('active', 'leaving');
         next.classList.add('active');
         next.scrollTop = 0;
-        
-        // 홈 화면 타이핑 리플로우
-        const typedElements = next.querySelectorAll('.typed');
-        typedElements.forEach(el => {
+
+        // 홈 타이핑 애니메이션 리플로우
+        next.querySelectorAll('.typed').forEach(el => {
           el.style.animation = 'none';
           el.offsetHeight;
           el.style.animation = '';
         });
 
-        // 2, 3, 4페이지 본문 순차 타이핑 실행
         runTypingForPage(next);
-
-        next.querySelector('button, a')?.focus();
+        // C14: focus() 강제 이동 삭제
       };
 
       if (document.body.classList.contains('reduce-motion') || !current) {
@@ -286,14 +395,14 @@
       }
     }
 
-    document.addEventListener('click', event => { 
-      const control = event.target.closest('[data-page]'); 
-      if (control) {
-        openPage(control.dataset.page);
-      }
+    document.addEventListener('click', event => {
+      const control = event.target.closest('[data-page]');
+      if (control) openPage(control.dataset.page);
     });
 
-    motionButton.addEventListener('click', () => setMotion(!document.body.classList.contains('reduce-motion')));
+    motionButton.addEventListener('click', () =>
+      setMotion(!document.body.classList.contains('reduce-motion'))
+    );
     setMotion(reduced);
   </script>
 </body>
