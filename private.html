@@ -18,7 +18,6 @@
       <button class="motion" type="button" aria-pressed="false">모션 줄이기: OFF</button>
     </header>
 
-    <!-- 잠금 화면 (기본 진입) -->
     <section class="screen hero active" id="locked" aria-labelledby="locked-title">
       <div>
         <p class="prompt">./private</p>
@@ -39,13 +38,12 @@
       </div>
     </section>
 
-    <!-- 비공개 자료 화면 (로그인 후) -->
     <section class="screen" id="private" aria-labelledby="private-title">
       <div class="page-head">
         <button class="back" type="button" data-page="locked">← cd ~/private</button>
         <p class="label">PRIVATE / 나만 보기</p>
-        <h1 id="private-title" class="type-text">JSW.private</h1>
-        <p class="subtitle type-text">나만 보는 자리</p>
+        <h1 id="private-title">JSW.private</h1>
+        <p class="subtitle">나만 보는 자리</p>
         <div class="account-line">세션 <code id="session-prefix">—</code> 로 식별됨 · 계정 <code id="account-id">—</code></div>
       </div>
 
@@ -55,9 +53,7 @@
       </div>
 
       <div class="case-grid">
-        <div class="left-stack" id="items-container">
-          <!-- JS가 채움 -->
-        </div>
+        <div class="left-stack" id="items-container"></div>
         <article class="block result">
           <h2>NOTE / 이 자리의 성격</h2>
           <p>여기 있는 내용은 모두 <strong>가상의 예시</strong>입니다. 실제 개인정보·연락처는 없습니다. 이 자리는 패스키로 잠겨 있어 로그인한 본인만 볼 수 있습니다.</p>
@@ -71,13 +67,12 @@
       </div>
     </section>
 
-    <!-- 패스키 관리 화면 -->
     <section class="screen" id="credentials" aria-labelledby="credentials-title">
       <div class="page-head">
         <button class="back" type="button" data-page="private">← cd ~/private</button>
         <p class="label">CREDENTIALS / 등록된 패스키</p>
-        <h1 id="credentials-title" class="type-text">JSW.keys</h1>
-        <p class="subtitle type-text">패스키 관리</p>
+        <h1 id="credentials-title">JSW.keys</h1>
+        <p class="subtitle">패스키 관리</p>
       </div>
 
       <div class="status-row">
@@ -87,9 +82,7 @@
 
       <p class="intro">기기를 잃어버렸을 때를 대비해 두 개 이상 등록해 두세요. 하나를 지워도 나머지로 들어올 수 있습니다.</p>
 
-      <div class="cred-list" id="cred-container">
-        <!-- JS가 채움 -->
-      </div>
+      <div class="cred-list" id="cred-container"></div>
 
       <div class="pager" style="margin-top:18px">
         <button type="button" id="btn-add-cred">+ 패스키 추가</button>
@@ -100,151 +93,139 @@
 
   <script src="common.js"></script>
   <script>
-  // ============================================================
-  // private.html 전용 로직 (common.js의 JSW 헬퍼 사용)
-  // ============================================================
-  const { toast, registerPasskey, loginPasskey, logout,
-          fetchPrivate, fetchCredentials, deleteCredential } = window.JSW;
+  (function () {
+    const J = window.JSW;
+    const $ = (id) => document.getElementById(id);
 
-  const $ = (id) => document.getElementById(id);
-
-  // 로그인 상태에 따라 진입 화면을 결정
-  async function bootstrap() {
-    const res = await fetchPrivate();
-    if (res.ok && res.body) {
-      renderPrivate(res.body);
-      window.JSW.openPage('private');
-    } else {
-      window.JSW.openPage('locked');
-    }
-  }
-
-  function renderPrivate(data) {
-    $('session-prefix').textContent = `sess:${data.sessionPrefix}…`;
-    $('account-id').textContent = data.userId.slice(0, 8);
-    $('badge-count').textContent = `자료 ${data.items.length}건`;
-
-    const container = $('items-container');
-    container.innerHTML = '';
-    data.items.forEach(item => {
-      const art = document.createElement('article');
-      art.className = 'block';
-      const h2 = document.createElement('h2');
-      h2.className = 'type-text';
-      h2.textContent = item.title;
-      const p = document.createElement('p');
-      p.className = 'type-text';
-      p.textContent = item.body;
-      art.appendChild(h2);
-      art.appendChild(p);
-      container.appendChild(art);
-    });
-  }
-
-  // 계정 만들기
-  $('btn-register').addEventListener('click', async () => {
-    const result = await registerPasskey();
-    if (result) {
-      const res = await fetchPrivate();
-      if (res.ok) {
+    async function bootstrap() {
+      const res = await J.fetchPrivate();
+      if (res.ok && res.body) {
         renderPrivate(res.body);
-        window.JSW.openPage('private');
+        J.openPage('private');
+      } else {
+        J.openPage('locked');
       }
     }
-  });
 
-  // 패스키로 열기
-  $('btn-login').addEventListener('click', async () => {
-    const result = await loginPasskey();
-    if (result) {
-      const res = await fetchPrivate();
-      if (res.ok) {
-        renderPrivate(res.body);
-        window.JSW.openPage('private');
-      }
-    }
-  });
+    function renderPrivate(data) {
+      $('session-prefix').textContent = `sess:${data.sessionPrefix}…`;
+      $('account-id').textContent = data.userId.slice(0, 8);
+      $('badge-count').textContent = `자료 ${data.items.length}건`;
 
-  // 로그아웃
-  $('btn-logout').addEventListener('click', async () => {
-    await logout();
-    window.JSW.openPage('locked');
-  });
-
-  // 패스키 목록 렌더
-  async function renderCredentials() {
-    const res = await fetchCredentials();
-    if (!res.ok) {
-      toast('패스키 목록을 불러올 수 없습니다');
-      return;
-    }
-    const list = res.body.credentials || [];
-    $('badge-cred-count').textContent = `패스키 ${list.length}개`;
-    $('badge-last-warn').style.display = list.length <= 1 ? '' : 'none';
-
-    const container = $('cred-container');
-    container.innerHTML = '';
-
-    if (list.length === 0) {
-      const note = document.createElement('div');
-      note.className = 'empty-note';
-      note.textContent = '등록된 패스키가 없습니다. 복구할 수 없습니다. 새 계정을 만들어 주세요.';
-      container.appendChild(note);
-      return;
-    }
-
-    list.forEach(cred => {
-      const item = document.createElement('div');
-      item.className = 'cred-item';
-
-      const meta = document.createElement('div');
-      meta.className = 'cred-meta';
-      const name = document.createElement('div');
-      name.className = 'cred-name';
-      name.textContent = cred.name;
-      const date = document.createElement('div');
-      date.className = 'cred-date';
-      date.textContent = '등록일 ' + new Date(cred.createdAt).toLocaleString('ko-KR');
-      meta.appendChild(name);
-      meta.appendChild(date);
-
-      const del = document.createElement('button');
-      del.type = 'button';
-      del.textContent = '삭제';
-      del.addEventListener('click', async () => {
-        if (!confirm('이 패스키를 삭제할까요?')) return;
-        const r = await deleteCredential(cred.id);
-        if (r.ok) {
-          toast(`삭제됨 · 남은 패스키 ${r.body.remaining}개`);
-          renderCredentials();
-        } else {
-          toast('삭제 실패');
-        }
+      const container = $('items-container');
+      container.innerHTML = '';
+      data.items.forEach(item => {
+        const art = document.createElement('article');
+        art.className = 'block';
+        const h2 = document.createElement('h2');
+        h2.textContent = item.title;
+        const p = document.createElement('p');
+        p.textContent = item.body;
+        art.appendChild(h2);
+        art.appendChild(p);
+        container.appendChild(art);
       });
+    }
 
-      item.appendChild(meta);
-      item.appendChild(del);
-      container.appendChild(item);
+    $('btn-register').addEventListener('click', async () => {
+      const result = await J.registerPasskey();
+      if (result) {
+        const res = await J.fetchPrivate();
+        if (res.ok) {
+          renderPrivate(res.body);
+          J.openPage('private');
+        }
+      }
     });
-  }
 
-  // 패스키 관리 화면 진입 시 목록 로드
-  document.addEventListener('click', (e) => {
-    const control = e.target.closest('[data-page]');
-    if (control && control.dataset.page === 'credentials') {
-      renderCredentials();
+    $('btn-login').addEventListener('click', async () => {
+      const result = await J.loginPasskey();
+      if (result) {
+        const res = await J.fetchPrivate();
+        if (res.ok) {
+          renderPrivate(res.body);
+          J.openPage('private');
+        }
+      }
+    });
+
+    $('btn-logout').addEventListener('click', async () => {
+      await J.logout();
+      J.openPage('locked');
+    });
+
+    async function renderCredentials() {
+      const res = await J.fetchCredentials();
+      if (!res.ok) {
+        J.toast('패스키 목록을 불러올 수 없습니다');
+        return;
+      }
+      const list = res.body.credentials || [];
+      $('badge-cred-count').textContent = `패스키 ${list.length}개`;
+      $('badge-last-warn').style.display = list.length <= 1 ? '' : 'none';
+
+      const container = $('cred-container');
+      container.innerHTML = '';
+
+      if (list.length === 0) {
+        const note = document.createElement('div');
+        note.className = 'empty-note';
+        note.textContent = '등록된 패스키가 없습니다. 복구할 수 없습니다. 새 계정을 만들어 주세요.';
+        container.appendChild(note);
+        return;
+      }
+
+      list.forEach(cred => {
+        const item = document.createElement('div');
+        item.className = 'cred-item';
+
+        const meta = document.createElement('div');
+        meta.className = 'cred-meta';
+        const name = document.createElement('div');
+        name.className = 'cred-name';
+        name.textContent = cred.name;
+        const date = document.createElement('div');
+        date.className = 'cred-date';
+        date.textContent = '등록일 ' + new Date(cred.createdAt).toLocaleString('ko-KR');
+        meta.appendChild(name);
+        meta.appendChild(date);
+
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.textContent = '삭제';
+        del.addEventListener('click', async () => {
+          if (!confirm('이 패스키를 삭제할까요?')) return;
+          const r = await J.deleteCredential(cred.id);
+          if (r.ok) {
+            J.toast(`삭제됨 · 남은 패스키 ${r.body.remaining}개`);
+            renderCredentials();
+          } else {
+            J.toast('삭제 실패');
+          }
+        });
+
+        item.appendChild(meta);
+        item.appendChild(del);
+        container.appendChild(item);
+      });
     }
-  });
 
-  // 패스키 추가
-  $('btn-add-cred').addEventListener('click', async () => {
-    const result = await registerPasskey();
-    if (result) {
-      renderCredentials();
-    }
-  });
+    document.addEventListener('click', (e) => {
+      const control = e.target.closest('[data-page]');
+      if (control && control.dataset.page === 'credentials') {
+        renderCredentials();
+      }
+    });
 
-  bootstrap();
+    $('btn-add-cred').addEventListener('click', async () => {
+      const result = await J.registerPasskey();
+      if (result) {
+        renderCredentials();
+      }
+    });
+
+    bootstrap();
+  })();
   </script>
 </body>
 </html>

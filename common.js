@@ -19,7 +19,8 @@ document.querySelectorAll('.type-text').forEach(el => {
 });
 
 function runTypingForPage(pageEl) {
-  const targets = pageEl.querySelectorAll('.type-text');
+  // dataset.text가 없는 요소는 건너뜀 (JS로 동적 추가된 요소 보호)
+  const targets = [...pageEl.querySelectorAll('.type-text')].filter(el => typeof el.dataset.text === 'string');
   if (!targets.length) return;
 
   if (document.body.classList.contains('reduce-motion')) {
@@ -79,12 +80,10 @@ function openPage(id) {
   }
 }
 
-// SPA 내 이동 + private.html/index.html 간 이동을 모두 처리
 document.addEventListener('click', event => {
   const control = event.target.closest('[data-page]');
   if (control) {
     const target = control.dataset.page;
-    // 특수 페이지: 다른 HTML로 이동
     if (target === '__private__') {
       window.location.href = '/private.html';
       return;
@@ -108,7 +107,6 @@ if (motionButton) {
 // 패스키(WebAuthn) 클라이언트 로직
 // ============================================================
 
-// @simplewebauthn/browser를 ESM CDN에서 동적 로드
 let _swb = null;
 async function swb() {
   if (!_swb) {
@@ -141,7 +139,6 @@ function toast(msg, ms = 2600) {
   el._t = setTimeout(() => el.classList.remove('show'), ms);
 }
 
-// --- 등록: "계정 만들기" ---
 async function registerPasskey() {
   const start = await api('/api/register-start', { method: 'POST' });
   if (!start.ok) { toast('등록 시작 실패'); return null; }
@@ -166,7 +163,6 @@ async function registerPasskey() {
   return finish.body;
 }
 
-// --- 로그인: "패스키로 열기" ---
 async function loginPasskey() {
   const start = await api('/api/login-start', { method: 'POST' });
   if (!start.ok) { toast('로그인 시작 실패'); return null; }
@@ -211,7 +207,6 @@ async function deleteCredential(credentialId) {
   });
 }
 
-// 전역 노출 (private.html에서 사용)
 window.JSW = {
   openPage, toast,
   registerPasskey, loginPasskey, logout,
