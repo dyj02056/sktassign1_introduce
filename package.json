@@ -1,0 +1,10 @@
+﻿{
+  "name": "sktassign8-passkey",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@simplewebauthn/server": "^13.0.0",
+    "@vercel/kv": "^3.0.0"
+  }
+}
