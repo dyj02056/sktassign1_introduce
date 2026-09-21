@@ -1,131 +1,132 @@
-# 제출 점검 및 수정 기록
+# 과제 8 — 내 소개 페이지에 패스키 달기
 
-## 1. 구현 요약
+## 0. 프로젝트 개요
 
-- 단일 HTML/CSS/JavaScript로 구현한 **터미널 UI 컨셉의 반응형 포트폴리오**입니다.
-- 하나의 `<main class="terminal">` 프레임 안에 4개의 `<section class="screen">`이 있으며, JavaScript로 `active` 클래스를 토글해 화면을 전환합니다.
-  - `#home` — 소개 및 3개 메뉴 (JSW.exe / JSW.log / JSW.lint)
-  - `#execute` — 01 / EXECUTE, 실행하는 (JSW.exe)
-  - `#log` — 02 / WRITE, 기록하는 (JSW.log)
-  - `#prevent` — 03 / PREVENT, 예방하는 (JSW.lint)
-- 각 페이지는 `PROBLEM / ACTION / RESULT` 구조로 프로젝트 근거를 제시합니다.
-- 홈 화면의 3개 커맨드 버튼은 실행·기록·예방 페이지로 전환되며, 하단 `.pager`로 순차 이동 및 홈 복귀가 가능합니다.
-- GitHub 및 Notion 근거 링크 6개는 모두 새 탭(`target="_blank" rel="noopener noreferrer"`)에서 선언된 주소로 열립니다.
-- 상단 바의 "모션 줄이기" 버튼과 OS의 `prefers-reduced-motion` 설정을 통해 큰 움직임을 줄이거나 끌 수 있습니다.
+- **결과물 URL**: https://sktassign8-passkey.vercel.app
+- **소스 URL**: https://github.com/dyj02056/sktassign1_introduce/tree/assignment8
+- **1번 과제(원본)**: https://sktassign1-introduce.vercel.app (그대로 유지)
 
----
+1번 과제의 소개 페이지를 그대로 이어받아, 그 위에 **패스키(WebAuthn)로 잠긴 비공개 영역**을 새로 얹은 프로젝트입니다.
+비밀번호를 만들지 않고, 기기에서 생성한 키 쌍 중 **공개키만 서버에 저장**하고, 로그인은 **매번 새로 발급되는 일회용 challenge에 대한 서명**으로 처리합니다.
 
-## 2. 공개하는 정보 (T01-C04)
-
-1. **이름**: 정성원
-2. **역할**: 웹 개발자
-3. **핵심 가치**: 실행(Execute), 기록(Write), 예방(Prevent)
-4. **대표 프로젝트**: login-watchdog (GitHub: dyj02056/login-watchdog)
-5. **기술 스택**: HTML / CSS / JavaScript, Supabase, GitHub Actions
-6. **사용 도구**: GitHub, Notion
-7. **문제 해결 사례**: 조별 프로젝트 초기 프로토타입 선제 구축, 에러·개선 로그 기록을 통한 재발 방지, Supabase 서버 자동 keep-alive 자동화
+- 저장소: `sktassign1_introduce` 저장소의 `assignment8` 브랜치 (main은 1번 그대로 보존)
+- 배포: Vercel 프로젝트 2개 (main → 1번 URL, assignment8 → 8번 URL)
+- 저장소: Vercel KV (Upstash Redis 기반), 환경변수 `KV_REST_API_URL` / `KV_REST_API_TOKEN` 사용
 
 ---
 
-## 3. 공개하지 않는 정보 (T01-C05)
+## 1. 1번 과제와의 연결 (T08-C11)
 
-1. **고유식별정보**: 주민등록번호, 여권번호, 운전면허번호
-2. **연락처**: 휴대전화번호, 개인 이메일 주소
-3. **상세 거주지**: 집 주소, 상세 동·호수
-4. **인증 정보**: 계정 비밀번호, API 키, 액세스 토큰, OAuth 시크릿
-5. **제3자 정보**: 가족·지인·팀원의 개인정보 및 동의 없는 사진
-6. **민감 정보**: 건강 상태, 금융 정보, 종교·정치 성향
-
----
-
-## 4. 실제 점검 결함과 수정 (T01-C17)
-
-### 결함 1. 첫 화면 세로 넘침 (1366×768 / 1920×1080)
-
-- **수정 전**: `.hero`가 `height:100%`로 고정되고 `h1`의 폰트 상한이 `4rem`(약 64px)이라, 1366×768 환경에서 첫 화면 하단의 세 번째 메뉴(`JSW.lint`)와 안내 문구가 `overflow:hidden`에 걸려 잘렸습니다. `.screen`의 세로 패딩이 `32px` 고정이라 저해상도에서 여백 부담이 컸습니다.
-- **수정 후**: `.hero`를 `min-height:100%`로 변경해 콘텐츠가 짧으면 중앙 정렬, 길면 자연 확장되도록 했습니다. `h1` 폰트를 `clamp(1.5rem, 3.6vw, 3.2rem)`으로 축소하고 `letter-spacing`을 `-.075em`에서 `-.06em`으로 완화했습니다. `.screen` 세로 패딩을 `clamp(16px, 3vh, 32px)`로, 커맨드 `min-height`를 `46px→42px`, `gap`을 `10px→8px`, `margin-top`을 `20px→16px`로 압축해 두 해상도 첫 화면에서 소개·활동·근거가 모두 노출됩니다.
-
-### 결함 2. 가로 넘침 (1366×768 / 1920×1080)
-
-- **수정 전**: `.links a`에 포함된 긴 GitHub URL(예: `blob/main/.github/workflows/supabase-keep-alive.yml`)이 줄바꿈되지 않아 컨테이너 폭을 초과했고, `.command` 내부의 `<b>`·`<small>`이 `min-width` 미지정이라 좁은 폭에서 부모를 밀어냈습니다. `html, body`에 가로 안전망이 없었습니다.
-- **수정 후**: `.links a`에 `overflow-wrap:anywhere; word-break:break-word; max-width:100%`를 적용하고, `.command`에 `min-width:0`, `.command b/small`에 `min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap`을 지정했습니다. `html, body`에 `overflow-x:hidden`을 추가하고 `h1`에 `overflow-wrap:break-word`를 지정해 두 해상도에서 가로 넘침이 0건입니다.
-
-### 결함 3. 제목 단계 건너뜀
-
-- **수정 전**: 홈 화면은 `<h1>` 하나뿐이었으나, 2~4페이지(`#execute`, `#log`, `#prevent`)는 `<h2>`로 시작하고 `.block`이 `<h3>`를 사용했습니다. 각 페이지를 독립 문서로 검사하면 `h1`이 부재해 제목 단계가 어긋났습니다.
-- **수정 후**: 각 페이지의 `.page-head h2`를 `<h1>`으로, `.block h3`를 `<h2>`로 승격했습니다. 시각적 크기는 `.page-head h1`, `.block h2` 선택자로 기존 스타일을 그대로 재현해 디자인 변화 없이 각 페이지가 `h1 → h2` 순서를 지킵니다. 홈 화면의 `aria-labelledby` 참조도 `id="page-title"`에서 `id="home-title"`으로 정리했습니다.
-
-### 결함 4. 페이지 전환 시 강제 포커스 이동
-
-- **수정 전**: `openPage()` 함수가 페이지 전환 직후 `next.querySelector('button, a')?.focus()`를 호출해 첫 버튼(`← cd ~/`)으로 포커스를 강제 이동시켰습니다. 이는 키보드 사용자가 Tab으로 이동하던 흐름을 끊고, 검사 도구가 "Tab 순서"를 위반으로 판정할 수 있었습니다.
-- **수정 후**: 해당 라인을 삭제하고 사용자가 Tab 키로 자연스럽게 이동하도록 했습니다. 페이지 전환 시 포커스는 현재 위치에 유지되며, 문서 순서(모션 버튼 → 백 버튼 → 커맨드/링크)대로 Tab 이동이 가능합니다.
-
-### 결함 5. 텍스트 대비율 안전 마진 부족
-
-- **수정 전**: 보조 텍스트 색상 `--muted: #9daead`가 배경 `#0c1417` 위에서 약 7.2:1로 기준(4.5:1)은 통과했으나 소형 텍스트(0.75~0.82rem)에서 마진이 부족했습니다. 또한 `h2 { text-shadow: 0 0 16px #99ff5e55 }` 규칙이 `.block h3`(→`h2`)에도 상속되어 소형 라벨의 가독성을 떨어뜨렸습니다.
-- **수정 후**: `--muted`를 `#b0c2c0`로 상향해 배경 대비 약 8.5:1을 확보했습니다. `.block h2`에 `text-shadow:none`을 명시해 소형 라벨의 잔상 효과를 제거했습니다. 모든 텍스트 조합이 일반 글자 4.5:1, 큰 글자 3:1 기준을 여유 있게 통과합니다.
-
-### 결함 6. 대상·목적 한 문장 부재 (T01-C03)
-
-- **수정 전**: 페이지의 대상("개발자 정성원")과 목적("포트폴리오")이 각각 `<h1>`과 `<meta name="description">`에 분리되어 있었습니다. 화면에 보이는 본문에는 "대상 + 목적"을 함께 담은 한 문장이 없어, 검사 도구가 "본문 기준"으로 판정할 경우 미통과 위험이 있었습니다.
-- **수정 후**: 홈 화면에 `.intro` 문단을 추가했습니다. "이 페이지는 실행·기록·예방을 중심으로 일하는 개발자 정성원의 역량과 프로젝트 근거를 소개하는 포트폴리오입니다." 한 문장으로 대상(정성원)과 목적(역량·프로젝트 근거 소개 포트폴리오)을 함께 명시했습니다. `clamp(0.85rem, 1.25vw, 1rem)` 크기와 `max-width:820px`로 세로 여유를 유지해 C10/C11에 영향을 주지 않습니다.
-
-### 결함 7. 소개 문장의 배치 위치 부적합 (T01-C03)
-
-- **수정 전**: `.intro` 문장이 `.dialogue` 아래, `<h1>` 위에 있어 화면상 세 번째 줄에 위치했습니다. 터미널 컨셉에서 가장 중요한 "페이지 목적 한 문장"이 상단에 오지 않아 정보 위계가 약했습니다.
-- **수정 후**: `.intro` 블록을 홈 `<section>` 내부의 **최상단**으로 이동해 신호등 바 바로 아래 첫 줄에 오도록 했습니다. `.intro`의 하단 마진을 `14px → 16px`로 조정해 이어지는 `.prompt`와 자연스러운 간격을 유지했습니다. 이제 화면 최상단에서 대상(정성원)과 목적(포트폴리오)을 한 문장으로 즉시 확인할 수 있습니다.
+- `main` 브랜치: 1번 과제의 `index.html` 그대로.
+- `assignment8` 브랜치: `main`에서 분기.
+- `index.html` 상단에 `<!-- branched from main @ assignment 1 (sktassign1_introduce) — T08-C11 -->` 주석으로 출처 명시.
+- 1번의 `<style>` 블록은 **한 글자도 바꾸지 않고** `common.css`로 이동. `<script>` 블록도 **한 글자도 바꾸지 않고** `common.js`로 이동.
+- `index.html`의 본문 마크업은 그대로 유지. 유일한 추가는 홈 메뉴에 `JSW.private` 버튼 1개.
 
 ---
 
-## 5. 통과 기준별 확인 결과
+## 2. 인증 흐름 (네 가지 경로)
 
-### 그룹 1: 화면 품질 / 접근성
+### (1) 등록 (계정 만들기 / 패스키 추가)
+1. 브라우저 → `POST /api/register-start`
+2. 서버: 세션 유무 확인 → 세션 있으면 기존 userId 재사용, 없으면 새 UUID 생성
+3. 서버: `generateRegistrationOptions()`로 challenge 생성 → KV `chal:reg:<userId>` 저장 (TTL 5분)
+4. 브라우저: `startRegistration()` 호출 → 기기가 키 쌍 생성, **개인키는 기기에 남음**
+5. 브라우저 → `POST /api/register-finish` (attestation 응답 전달)
+6. 서버: **challenge를 KV에서 즉시 삭제** → `verifyRegistrationResponse()`로 검증
+7. 서버: **공개키만** KV `cred:<credentialId>`에 저장, user 레코드의 `credentials` 배열에 추가
+8. 계정이 새로 만들어지는 경우에만 비공개 자료 3개를 `data:<userId>`에 생성
 
-| 코드 | 기준 | 상태 | 비고 |
-|---|---|---|---|
-| T01-C10 | 1366×768 첫 화면에 소개·활동·근거 노출 | ✅ | 세로 넘침 해소 (결함 1) |
-| T01-C11 | 1920×1080 첫 화면에 소개·활동·근거 노출 | ✅ | 세로 넘침 해소 (결함 1) |
-| T01-C12 | 두 해상도에서 가로 넘침 0건 | ✅ | 긴 URL 줄바꿈 (결함 2) |
-| T01-C13 | 모든 링크가 선언한 주소로 열림 | ✅ | 시크릿 창 6개 URL 접근 확인 완료 |
-| T01-C14 | 주요 기능 Tab 순서 이동 | ✅ | 강제 포커스 제거 (결함 4) |
-| T01-C15 | 제목 단계 건너뜀 없음 | ✅ | h1/h2 승격 (결함 3) |
-| T01-C16 | 텍스트 대비율 기준 충족 | ✅ | --muted 상향 (결함 5) |
-| T01-C17 | 실제 결함 3개 이상 수정 전/후 서술 | ✅ | 본 문서 §4에 7개 기재 |
-| T01-C18 | 브라우저 콘솔 빨간 오류 0건 | ✅ | 옵셔널 체이닝 사용, 문법 오류 없음 |
+### (2) 로그인 (패스키로 열기)
+1. 브라우저 → `POST /api/login-start`
+2. 서버: `generateAuthenticationOptions({ allowCredentials: [] })` → 이 도메인의 모든 패스키를 브라우저가 제시
+3. 서버: challenge를 KV `chal:auth:<challengeId>`에 저장 (TTL 5분)
+4. 브라우저: `startAuthentication()` → 사용자가 패스키 선택 → **개인키로 서명**
+5. 브라우저 → `POST /api/login-finish`
+6. 서버: **challenge를 KV에서 즉시 삭제** → `response.id`로 `cred:<id>` 조회 → **공개키로 서명 검증**
+7. 서버: 검증 성공 시 랜덤 32바이트 세션 토큰 생성 → KV `sess:<token>` 저장 (TTL 24시간) → HttpOnly + SameSite=Lax 쿠키 설정
+8. 서버: 응답에는 **세션 토큰 앞 6자만** 포함 (`sessionPrefix`)
 
-### 그룹 2: 상호작용 / 보안
+### (3) 로그아웃
+- `POST /api/logout` → KV에서 `sess:<token>` 삭제 → 쿠키 `Max-Age=0`으로 만료
 
-| 코드 | 기준 | 상태 | 비고 |
-|---|---|---|---|
-| T01-C19 | 페이지 내용 관련 상호작용 1개 이상 | ✅ | 페이지 전환, 모션 토글 |
-| T01-C20 | 마우스로 실행 가능 | ✅ | click 이벤트 위임 |
-| T01-C21 | 키보드로 실행 가능 | ✅ | 네이티브 `<button>` 사용 |
-| T01-C22 | 큰 움직임 줄이기/끄기 가능 | ✅ | `.motion` 버튼 + `prefers-reduced-motion` |
-| T01-C23 | 비공개 개인정보 0건 | ✅ | 본 문서 §3 참조 |
-| T01-C24 | 비밀번호·토큰·API 키 원문 0건 | ✅ | 하드코딩된 시크릿 없음 |
-
-### 그룹 3: 공개 접근성 / 문서화
-
-| 코드 | 기준 | 상태 | 비고 |
-|---|---|---|---|
-| T01-C01 | 모든 URL이 시크릿 창에서 인증 없이 열림 | ✅ | 시크릿 창 6개 URL 접근 확인 완료 |
-| T01-C03 | 대상·목적이 한 문장으로 명시 | ✅ | `.intro` 최상단 배치 (결함 6, 7) |
-| T01-C04 | 공개할 정보 3개 이상 | ✅ | 본 문서 §2에 7개 기재 |
-| T01-C05 | 공개하지 않을 정보 3개 이상 | ✅ | 본 문서 §3에 6개 기재 |
-
-**범례**: ✅ 통과 / ⚠️ 부분 통과 / ❌ 미통과
+### (4) 비공개 자료 조회
+- `GET /api/private` → 쿠키에서 세션 토큰 추출 → KV에서 세션 조회 → **세션의 userId로만** `data:<userId>` 조회 → 반환
+- 요청의 `?userId=`, body의 `userId`, 헤더의 `X-User-Id` 등은 **절대 사용하지 않음**
 
 ---
 
-## 6. 변경 이력
+## 3. KV 저장 구조
 
-| 차수 | 변경 내용 | 관련 기준 |
+| 키 패턴 | 값 | TTL |
 |---|---|---|
-| 1차 | 세로 넘침 해소 (min-height, clamp 폰트/패딩, 간격 압축) | C10, C11 |
-| 1차 | 가로 넘침 해소 (overflow-wrap, min-width, overflow-x) | C12 |
-| 1차 | 제목 단계 정리 (page-head h1, block h2 승격) | C15 |
-| 1차 | 강제 포커스 제거 | C14 |
-| 1차 | 대비율 상향 (--muted #b0c2c0, block h2 text-shadow 제거) | C16 |
-| 1차 | 공개/비공개 정보 문서화 | C04, C05 |
-| 1차 | 수정 전/후 6개 결함 기록 | C17 |
-| 2차 | 홈 `.intro` 문장 최상단 배치 (HTML 순서 + margin 16px) | C03 |
+| `chal:reg:<userId>` | `{ challenge, userId, userName, isNewAccount }` | 5분 |
+| `chal:auth:<challengeId>` | `{ challenge }` | 5분 |
+| `user:<userId>` | `{ userId, displayName, credentials: [{id, name, createdAt}], createdAt }` | 없음 |
+| `cred:<credentialId>` | `{ credentialId, publicKey, counter, userId, name, deviceType, backedUp, createdAt }` | 없음 |
+| `sess:<token>` | `{ userId, createdAt }` | 24시간 |
+| `data:<userId>` | `[{ id, title, body }, ...]` (3개) | 없음 |
+
+**공개키만 저장**: `cred:<id>.publicKey`는 `Array.from(credential.publicKey)` 로 저장된 공개키 배열. 개인키는 기기를 떠나지 않으므로 서버에 없음.
+
+---
+
+## 4. 검증 기록 (T08-C50 4가지 + C37~C41)
+
+### (1) 로그인 없이 열기 (T08-C16, C17, C18)
+- `GET /api/private` (세션 쿠키 없이) → **401 Unauthorized**
+- 페이지 소스 확인: 비공개 자료 텍스트 없음
+
+### (2) 남의 패스키·자료 접근 시도 (T08-C37, C38, C39, C40, C41)
+- 계정 A userId: `69eca3a9` (앞 8자) / 계정 B userId: `8d683ed7` (앞 8자)
+- 계정 A로 로그인한 상태에서 `GET /api/private?userId=8d683ed7-...` 요청
+  → 응답 `userId: '69eca3a9-...'` + A의 자료만 반환 (쿼리 무시)
+- 계정 B로 로그인한 상태에서 `GET /api/private?userId=69eca3a9-...` 요청
+  → 응답 `userId: '8d683ed7-...'` + B의 자료만 반환
+- `POST /api/private` (body에 남의 userId) → **405 Method not allowed**
+- `GET /api/private` + `X-User-Id: <남의 userId>` → 여전히 내 자료만
+- 자료 건수: A = 3건, B = 3건 (동일)
+- 계정 A로 로그인 후 B의 credentialId로 `DELETE /api/credentials` → **403 Not your credential**
+- 소유권 확인 위치: `api/credentials.js`의 `const owned = (user.credentials || []).some(c => c.id === credentialId); if (!owned) return res.status(403)...`
+
+### (3) 이미 쓴 challenge 재사용 (T08-C31)
+- `POST /api/login-start` → `challengeId: 46207d4e-...`
+- 같은 `challengeId`로 1차 제출 → `401 Unknown credential` (challenge는 이미 삭제됨)
+- 같은 `challengeId`로 2차 제출 → **400 `Challenge not found or expired`**
+
+### (4) 패스키 삭제 후 로그인 (T08-C44, C45, C46)
+- 계정 A에 패스키 2개 등록 → 목록에 이름·등록일 표시 (T08-C42, C43)
+- 1개 삭제 → 남은 1개로 로그인 **성공** (T08-C44)
+- 삭제된 credentialId로 로그인 시도 → `401 Unknown credential` (T08-C45)
+- 남은 1개도 삭제 → 목록이 비고 화면에 **"등록된 패스키가 없습니다. 복구할 수 없습니다. 새 계정을 만들어 주세요."** 표시 (T08-C46)
+
+---
+
+## 5. 소스 위치 (T08-C49)
+
+| 흐름 | 지나는 소스 |
+|---|---|
+| 등록 | `api/register-start.js` → `common.js:registerPasskey()` → `api/register-finish.js` |
+| 로그인 | `api/login-start.js` → `common.js:loginPasskey()` → `api/login-finish.js` |
+| 로그아웃 | `api/logout.js` ← `common.js:logout()` |
+| 비공개 자료 조회 | `api/private.js` ← `common.js:fetchPrivate()` |
+| 세션 검증 (공통) | `api/_session.js`의 `getSession(req)` |
+
+---
+
+## 6. 아직 못 막은 것 (T08-C51)
+
+**마지막 패스키를 잃으면 계정 복구가 불가능합니다.** 비밀번호·이메일·SMS 등 대체 인증 수단이 없어서, 등록된 패스키가 0개가 되는 순간 계정은 영구 잠깁니다. 화면에는 "복구할 수 없습니다" 안내와 "마지막 패스키" 경고 배지로 대비하지만, 실제 복구 경로는 제공하지 않습니다.
+
+보조 완화:
+- challenge TTL은 5분이며 검증 직전에 즉시 삭제하므로 실질 재사용 창이 거의 없음.
+- 세션은 HttpOnly + Secure(https) + SameSite=Lax로 완화. XSS 자체는 막지 못함.
+- 동일 기기에 두 번째 패스키 등록은 브라우저·OS 정책상 어려워 다른 인증기(휴대폰)로 우회.
+
+---
+
+## 7. AI와 내 판단 (T08-C53)
+
+- **AI에게 맡긴 일**: WebAuthn 서버 코드 초안, KV 키 구조, 공통 CSS/JS 추출, 검증 명령, 문서 초안
+- **내가 판단한 일**: 저장소를 새로 만들지 않고 `assignment8` 브랜치로 분리해 1번 과제를 보존한 결정, KV가 Upstash로 바뀐 뒤에도 `KV_*` 환경변수명을 확인해 `@vercel/kv`를 유지한 판단, 두 번째 패스키를 휴대폰으로 등록한 선택
+- **AI 제안을 따르지 않은 일**: impeccable의 PRODUCT.md·DESIGN.md 생성을 생략하고 기존 `index.html`의 시각 언어를 evidence로 삼은 것 (과제가 요구한 문서 3개 외 추가 산출물 최소화)
