@@ -3,7 +3,7 @@
 ## 0. 프로젝트 개요
 
 - **결과물 URL**: https://sktassign8-passkey.vercel.app
-- **소스 URL**: https://github.com/dyj02056/sktassign1_introduce/tree/assignment8
+- **소스 URL**: (https://github.com/dyj02056/sktassign1_introduce/commit/57e79f87c1235332d5b2e27e396d55d3b929a17c)
 - **1번 과제(원본)**: https://sktassign1-introduce.vercel.app (그대로 유지)
 
 1번 과제의 소개 페이지를 그대로 이어받아, 그 위에 **패스키(WebAuthn)로 잠긴 비공개 영역**을 새로 얹은 프로젝트입니다.
