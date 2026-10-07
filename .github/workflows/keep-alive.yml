@@ -1,0 +1,19 @@
+name: Keep Vercel KV Alive
+
+# 실행 규칙 설정
+on:
+  schedule:
+    # 매일 한국 시간 기준 오전 9시(UTC 00:00)에 자동으로 실행됩니다.
+    - cron: '0 0 * * *'
+  # GitHub 웹사이트에서 'Run workflow' 버튼을 눌러 수동으로도 실행 가능하게 합니다.
+  workflow_dispatch:
+
+jobs:
+  ping-kv:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Ping to Vercel KV
+        run: |
+          curl -s -X POST "${{ secrets.KV_REST_API_URL }}/set/ping/alive" \
+            -H "Authorization: Bearer ${{ secrets.KV_REST_API_TOKEN }}"
+          echo "Vercel KV에 자동 신호(Ping) 보내기 완료!"
